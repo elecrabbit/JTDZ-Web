@@ -11,12 +11,26 @@
         <p>SOS：<img src="./../assets/images/ic_launcher.png" alt /></p>
         <p>预约退房：<img src="./../assets/images/tuif.png" alt /></p>
       </div>-->
-      <div class="header">
+      <div class="select-area">
         <div class="select_floor">
           <span>选层：</span>
           <el-select v-model="value" placeholder="请选择" @change="selected">
             <el-option v-for="(item,index) in floorList" :key="index" :label="index" :value="index"></el-option>
           </el-select>
+        </div>
+        <div class="room_stats">
+          <div class="state">
+            <i class="el-icon-message-solid" style="font-size:26px;color:#F56C6C;vertical-align: middle;"></i>
+            紧急呼叫 X {{sos.length}}
+          </div>
+          <div class="state">
+            <i class="el-icon-delete-solid" style="font-size:26px;color:#67C23A;vertical-align: middle;"></i>
+            清理 X {{qingli.length}}
+          </div>
+          <div class="state">
+            <i class="el-icon-s-finance" style="font-size:26px;color:#E6A23C;vertical-align: middle;"></i>
+            退房 X {{tuifang.length}}
+          </div>
         </div>
       </div>
       <ul class="roomlist">
@@ -53,6 +67,10 @@
               <span class="menci">{{item.mencistatus}}</span>
             </p>
             <p>
+              <span>房间温度：</span>
+              <span>{{item.nowtelephone}}</span>
+            </p>
+            <p>
               <span>空调控制：</span>
               <el-switch
                 v-model="item.kongtiao"
@@ -60,10 +78,6 @@
                 inactive-color="#ff4949"
                 @change="kongt(item)"
               ></el-switch>
-            </p>
-            <p>
-              <span>房间温度：</span>
-              <span>{{item.nowtelephone}}</span>
             </p>
 
             <!-- <div class="now">
@@ -84,23 +98,27 @@
         </li>
       </ul>
     </div>
-    <div class="article_right" v-show="bool"></div>
-    <img src="./../../static/images/you.png" class="shenzuo" @click="show_right($event)" alt />
+    <!-- <div class="article_right" v-show="bool"></div> -->
+    <el-button size="mini" class="right-btn" @click="show_right($event)">
+      <i style="font-size:20px" :class="rightData ? 'el-icon-s-unfold' : 'el-icon-s-fold'"></i>
+    </el-button>
+    <!-- <img src="./../../static/images/you.png" class="shenzuo" @click="show_right($event)" alt /> -->
     <div class="right_fixed" v-show="bool">
       <h4>客房快速统计</h4>
-      <div>
-        <p @click="allSos">
-          <img src="./../assets/images/ic_launcher.png" alt />
-          <span>SOS X {{sos.length}}</span>
-        </p>
-        <p @click="allqingli">
-          <img src="./../assets/images/qingli.png" alt />
-          <span>清理 X {{qingli.length}}</span>
-        </p>
-        <p @click="alltuifang">
-          <img src="./../assets/images/tuif.png" alt />
-          <span>退房 X {{tuifang.length}}</span>
-        </p>
+      <div @click="allSos">
+        <!-- <img src="./../assets/images/ic_launcher.png" alt /> -->
+        <i class="el-icon-message-solid" style="font-size:24px;color:#F56C6C;"></i>
+        <span>SOS X {{sos.length}}</span>
+      </div>
+      <div @click="allqingli">
+        <!-- <img src="./../assets/images/qingli.png" alt /> -->
+        <i class="el-icon-delete-solid" style="font-size:24px;color:#67C23A;"></i>
+        <span>清理 X {{qingli.length}}</span>
+      </div>
+      <div @click="alltuifang">
+        <!-- <img src="./../assets/images/tuif.png" alt /> -->
+        <i class="el-icon-s-finance" style="font-size:24px;color:#E6A23C;"></i>
+        <span>退房 X {{tuifang.length}}</span>
       </div>
     </div>
   </div>
@@ -111,6 +129,7 @@ import mqtt from "mqtt";
 export default {
   data() {
     return {
+      rightData: true,
       value: "所有房间",
       Hotel: "", //存储酒店名称
       tableData: [],
@@ -368,13 +387,13 @@ export default {
     delate(item) {
       // console.log(item);
       var payload = {
-              LowerMachine_ID: item.LowerMachine.DeviceList[i].LowerMachine_ID,
-              DeviceName: item.LowerMachine.DeviceList[i].DeviceName,
-              DeviceClass: item.LowerMachine.DeviceList[i].DeviceClass,
-              AreaOfRoom: item.LowerMachine.DeviceList[i].AreaOfRoom,
-              OwinSHA: item.LowerMachine.DeviceList[i].OwinSHA,
-              DeviceProperty: []
-            };
+        LowerMachine_ID: item.LowerMachine.DeviceList[i].LowerMachine_ID,
+        DeviceName: item.LowerMachine.DeviceList[i].DeviceName,
+        DeviceClass: item.LowerMachine.DeviceList[i].DeviceClass,
+        AreaOfRoom: item.LowerMachine.DeviceList[i].AreaOfRoom,
+        OwinSHA: item.LowerMachine.DeviceList[i].OwinSHA,
+        DeviceProperty: []
+      };
       if (item.seletetype == "sos") {
         for (var i in item.LowerMachine.DeviceList) {
           if (item.LowerMachine.DeviceList[i].DeviceClass == "紧急呼叫") {
@@ -431,18 +450,20 @@ export default {
       );
     },
     show_right(e) {
-      if (
-        e.target.src ==
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVUlEQVRYR+2Xu0rEQBSG/zl5irkUWllYCYKVsPbWglaChaCNoP3uPoBauYIIWln4FJY+RiBzAX2HPZJAlpCsWmySCeg0IUXO/51rzghEPiKyPoYBEEJYAzBm5vzZ+RFCpACmUsq0iIBzbiKEGHeuXBFg5pnW+rwA8N7fArjoE2A+n18ZY64XNeCcOwSw0QcEEX1IKWe51jCKsA+vv9MYfgS890dKqZfcgyzLRkQ0WjVizJwaY55/rQHv/Q2ALaXUXpZlO0mSvK8qXn7PzFOt9WRpCkIIm8x8D2AXwFsOEEI4Y+a7tgAAPCilThsA1tpjInqqCBUA+bu19pKI9luA+FRKHTRS4L1/BHBSE1gAtCDcMFFOwm0ArwDWl4j8AYDS62gpqIY9ahGWIFHbsBqNaIOoBhFvFHfR93Wbw/8bdh2FYaxk0ZfS6Gt59ItJ14X2k/3/NvwC02S0Ibsuo7YAAAAASUVORK5CYII="
-      ) {
-        e.target.src =
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABfUlEQVRYR+2WsUrDUBSGz+lSXG2X/oeOvoHoajZXN5ciDiIICrroIm0nwUUXHXwBFcEHcLEv4KCLda65XTrURQlYjlTa0KZJFZqbLMkWyD3/x3/Oyf2ZUn44ZX3KAHwHjDGrRLRFRPOW29JV1WcRqfV1fIB2u72jqheWxf3yAH61Rx1YI6L7hACuAGyPAfRfWq3WHBEt24Yol8uNoUa2Bb4DnU5HisWia9v+YH0fwHXdGjO/AIgcRGPMCREdxQB5DmB/bAgHAFVVPRWRwzARY8wjEa3EANAA4IQCDIo38vl8pVAovI+KDSFnBVDV+sSPKKT4FzNvlEqlu1kFp50PzkA15OMzAAe2IP4EmDYTcUBFAqiqIaJNEXmIQyiqRigAM980m82K4zjfoweTWMNdVT0Wkcu01vAWwGuUXVbX0Gaf/7WGGcAgjCzYzoS5XO6Dmd8AfAbvgnVmvk6oFZOXUcKh9AnA4pgD/UDied4eMy/ZdqHX69WHuTDLhJkDP7YepCHJq8/eAAAAAElFTkSuQmCC";
-        this.bool = true;
-      } else {
-        e.target.src =
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVUlEQVRYR+2Xu0rEQBSG/zl5irkUWllYCYKVsPbWglaChaCNoP3uPoBauYIIWln4FJY+RiBzAX2HPZJAlpCsWmySCeg0IUXO/51rzghEPiKyPoYBEEJYAzBm5vzZ+RFCpACmUsq0iIBzbiKEGHeuXBFg5pnW+rwA8N7fArjoE2A+n18ZY64XNeCcOwSw0QcEEX1IKWe51jCKsA+vv9MYfgS890dKqZfcgyzLRkQ0WjVizJwaY55/rQHv/Q2ALaXUXpZlO0mSvK8qXn7PzFOt9WRpCkIIm8x8D2AXwFsOEEI4Y+a7tgAAPCilThsA1tpjInqqCBUA+bu19pKI9luA+FRKHTRS4L1/BHBSE1gAtCDcMFFOwm0ArwDWl4j8AYDS62gpqIY9ahGWIFHbsBqNaIOoBhFvFHfR93Wbw/8bdh2FYaxk0ZfS6Gt59ItJ14X2k/3/NvwC02S0Ibsuo7YAAAAASUVORK5CYII=";
-        this.bool = false;
-      }
+      // if (
+      //   e.target.src ==
+      //   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVUlEQVRYR+2Xu0rEQBSG/zl5irkUWllYCYKVsPbWglaChaCNoP3uPoBauYIIWln4FJY+RiBzAX2HPZJAlpCsWmySCeg0IUXO/51rzghEPiKyPoYBEEJYAzBm5vzZ+RFCpACmUsq0iIBzbiKEGHeuXBFg5pnW+rwA8N7fArjoE2A+n18ZY64XNeCcOwSw0QcEEX1IKWe51jCKsA+vv9MYfgS890dKqZfcgyzLRkQ0WjVizJwaY55/rQHv/Q2ALaXUXpZlO0mSvK8qXn7PzFOt9WRpCkIIm8x8D2AXwFsOEEI4Y+a7tgAAPCilThsA1tpjInqqCBUA+bu19pKI9luA+FRKHTRS4L1/BHBSE1gAtCDcMFFOwm0ArwDWl4j8AYDS62gpqIY9ahGWIFHbsBqNaIOoBhFvFHfR93Wbw/8bdh2FYaxk0ZfS6Gt59ItJ14X2k/3/NvwC02S0Ibsuo7YAAAAASUVORK5CYII="
+      // ) {
+      //   e.target.src =
+      //     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABfUlEQVRYR+2WsUrDUBSGz+lSXG2X/oeOvoHoajZXN5ciDiIICrroIm0nwUUXHXwBFcEHcLEv4KCLda65XTrURQlYjlTa0KZJFZqbLMkWyD3/x3/Oyf2ZUn44ZX3KAHwHjDGrRLRFRPOW29JV1WcRqfV1fIB2u72jqheWxf3yAH61Rx1YI6L7hACuAGyPAfRfWq3WHBEt24Yol8uNoUa2Bb4DnU5HisWia9v+YH0fwHXdGjO/AIgcRGPMCREdxQB5DmB/bAgHAFVVPRWRwzARY8wjEa3EANAA4IQCDIo38vl8pVAovI+KDSFnBVDV+sSPKKT4FzNvlEqlu1kFp50PzkA15OMzAAe2IP4EmDYTcUBFAqiqIaJNEXmIQyiqRigAM980m82K4zjfoweTWMNdVT0Wkcu01vAWwGuUXVbX0Gaf/7WGGcAgjCzYzoS5XO6Dmd8AfAbvgnVmvk6oFZOXUcKh9AnA4pgD/UDied4eMy/ZdqHX69WHuTDLhJkDP7YepCHJq8/eAAAAAElFTkSuQmCC";
+      //   this.bool = true;
+      // } else {
+      //   e.target.src =
+      //     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVUlEQVRYR+2Xu0rEQBSG/zl5irkUWllYCYKVsPbWglaChaCNoP3uPoBauYIIWln4FJY+RiBzAX2HPZJAlpCsWmySCeg0IUXO/51rzghEPiKyPoYBEEJYAzBm5vzZ+RFCpACmUsq0iIBzbiKEGHeuXBFg5pnW+rwA8N7fArjoE2A+n18ZY64XNeCcOwSw0QcEEX1IKWe51jCKsA+vv9MYfgS890dKqZfcgyzLRkQ0WjVizJwaY55/rQHv/Q2ALaXUXpZlO0mSvK8qXn7PzFOt9WRpCkIIm8x8D2AXwFsOEEI4Y+a7tgAAPCilThsA1tpjInqqCBUA+bu19pKI9luA+FRKHTRS4L1/BHBSE1gAtCDcMFFOwm0ArwDWl4j8AYDS62gpqIY9ahGWIFHbsBqNaIOoBhFvFHfR93Wbw/8bdh2FYaxk0ZfS6Gt59ItJ14X2k/3/NvwC02S0Ibsuo7YAAAAASUVORK5CYII=";
+      //   this.bool = false;
+      // }
+      this.rightData = !this.rightData;
+      this.bool = !this.bool;
     },
     changeFloor(val) {
       this.$store.commit("changeFloor", val);
@@ -651,42 +672,37 @@ export default {
 .home {
   background: rgb(236, 236, 236);
   display: flex;
+  .article_left {
+    width: 100%;
+  }
   .article_right {
     width: 170px;
   }
-  .shenzuo {
-    width: 25px;
+  .right-btn {
     position: fixed;
     top: 50px;
-    right: 25px;
+    right: 5px;
   }
   .right_fixed {
     position: fixed;
     width: 120px;
-    height: 85vh;
-    top: 110px;
-    right: 25px;
+    height: 95vh;
+    top: 105px;
+    right: 5px;
     border-radius: 5px;
-    background: rgb(133, 132, 109);
+    background: #3b4255;
     h4 {
       text-align: center;
-      color: rgb(60, 255, 0);
+      color: #fff;
       margin: 20px 0;
     }
     div {
-      margin: 40px 0;
-      p {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 0;
-        img {
-          width: 25px;
-          margin-right: 10px;
-        }
-        span {
-          color: aqua;
-        }
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      margin-top: 10px;
+      span {
+        color: skyblue;
       }
     }
   }
@@ -736,19 +752,32 @@ export default {
       top: 20px;
     }
   }
-  .header {
+  .select-area {
     width: 100%;
+    display: flex;
     .select_floor {
-      span {
-        margin-left: 100px;
-      }
-      select {
-        color: rgb(248, 14, 6);
-        border: 2px solid rgb(4, 115, 243);
-        outline: none;
+      margin-left: 100px;
+    }
+    .room_stats {
+      width: 450px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      margin-left: 80px;
+      .state {
+        border-radius: 5px;
+        padding: 4px;
+        transition: background-color .5s,color .5s;
+        -moz-transition: background-color .5s,color .5s;
+        -webkit-transition: background-color .5s,color .5s;
+        -o-transition: background-color .5s,color .5s;
+        &:hover {
+          background-color: #4c5672;
+          color:#fff;
+          cursor: pointer;
+        }
       }
     }
-
     .search {
       width: 300px;
       position: absolute;
