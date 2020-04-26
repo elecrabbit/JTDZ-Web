@@ -1,0 +1,44 @@
+[
+    {
+        "Device_ID": null,
+        "LowerMachine_ID": "1",
+        "DeviceName": "门显",
+        "DeviceClass": "门显",
+        "AreaOfRoom": "客厅",
+        "OwinSHA": "7A.74.01.01.70",
+        "DeviceProperty": [
+            {
+                "AttributeName": "清理",
+                "AttributeValue": "开"
+            }
+        ]
+    },
+    {
+        "Device_ID": null,
+        "LowerMachine_ID": "",
+        "DeviceName": "预约退房",
+        "DeviceClass": "预约服务",
+        "AreaOfRoom": "",
+        "OwinSHA": "7A.74.01.01.D0",
+        "DeviceProperty": [
+            {
+                "AttributeName": "状态更改",
+                "AttributeValue": "开"
+            }
+        ]
+    },
+    {
+        "Device_ID": null,
+        "LowerMachine_ID": "1",
+        "DeviceName": "SOS",
+        "DeviceClass": "紧急呼叫",
+        "AreaOfRoom": "客厅",
+        "OwinSHA": "7A.74.01.01.90",
+        "DeviceProperty": [
+            {
+                "AttributeName": "状态更改",
+                "AttributeValue": "开"
+            }
+        ]
+    }
+]
