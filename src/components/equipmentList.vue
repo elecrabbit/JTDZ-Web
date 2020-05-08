@@ -78,7 +78,6 @@ export default {
       this.roomlist(this.idn);
     }
     this.getList = JSON.parse(localStorage.getItem(this.idn + "tt"))
-    console.log(this.getList)
     if (this.getList != null)    {
       this.getMas(this.getList);
     } else    {

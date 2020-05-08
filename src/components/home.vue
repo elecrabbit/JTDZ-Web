@@ -19,16 +19,25 @@
           </el-select>
         </div>
         <div class="room_stats">
-          <div class="state">
-            <i class="el-icon-message-solid" style="font-size:26px;color:#F56C6C;vertical-align: middle;"></i>
+          <div class="state" @click="filterNeed($event)">
+            <i
+              class="el-icon-message-solid"
+              style="font-size:26px;color:#F56C6C;vertical-align: bottom;"
+            ></i>
             紧急呼叫 X {{sos.length}}
           </div>
-          <div class="state">
-            <i class="el-icon-delete-solid" style="font-size:26px;color:#67C23A;vertical-align: middle;"></i>
+          <div class="state" @click="filterNeed($event)">
+            <i
+              class="el-icon-delete-solid"
+              style="font-size:26px;color:#67C23A;vertical-align: bottom;"
+            ></i>
             清理 X {{qingli.length}}
           </div>
-          <div class="state">
-            <i class="el-icon-s-finance" style="font-size:26px;color:#E6A23C;vertical-align: middle;"></i>
+          <div class="state" @click="filterNeed($event)">
+            <i
+              class="el-icon-s-finance"
+              style="font-size:26px;color:#E6A23C;vertical-align: bottom;"
+            ></i>
             退房 X {{tuifang.length}}
           </div>
         </div>
@@ -37,18 +46,33 @@
         <li
           v-for="(item,index) in tableData"
           :key="index"
-          @dblclick="hand(item.RoomNUM,item.LowerMachine.RunStatus)"
+          @dblclick="jumpTo(item.RoomNUM,item.LowerMachine.RunStatus)"
           class="myroom"
         >
           <el-card class="box-card11">
             <div slot="header" class="clearfix">
               <span class="roomNUM">{{item.RoomNUM}}房间</span>
               <div>
-                <img v-show="img1" class="img1" src="./../assets/images/qingli.png" alt />
-                <img v-show="img2" class="img2" src="./../assets/images/ic_launcher.png" alt />
-                <img v-show="img3" class="img3" src="./../assets/images/tuif.png" alt />
+
+                <i
+                  v-show="item.needSOS"
+                  class="el-icon-message-solid room-state-icon"
+                  style="color:#F56C6C;"
+                  @click="handleRoomState(item,$event)"
+                ></i>
+                <i
+                  v-show="item.needClean"
+                  class="el-icon-delete-solid room-state-icon"
+                  style="color:#67C23A;"
+                  @click="handleRoomState(item,$event)"
+                ></i>
+                <i
+                  v-show="item.needTuifang"
+                  class="el-icon-s-finance room-state-icon"
+                  style="color:#E6A23C;"
+                  @click="handleRoomState(item,$event)"
+                ></i>
               </div>
-              <i class="el-icon-error" v-show="ic" @click.stop="delate(item)"></i>
             </div>
             <p>
               <span>房间类型：</span>
@@ -76,63 +100,26 @@
                 v-model="item.kongtiao"
                 active-color="#13ce66"
                 inactive-color="#ff4949"
-                @change="kongt(item)"
+                @change="kongtiaoChange(item)"
               ></el-switch>
             </p>
 
-            <!-- <div class="now">
-              <div class="tel">
-                <p>{{item.nowtelephone}}</p>
-                <p>PC</p>
-              </div>
-              <div class="tel">
-                <p>100</p>
-                <p>PM</p>
-              </div>
-              <div class="tel">
-                <p>30%</p>
-                <p>HR</p>
-              </div>
-            </div>-->
           </el-card>
         </li>
       </ul>
     </div>
-    <!-- <div class="article_right" v-show="bool"></div> -->
-    <el-button size="mini" class="right-btn" @click="show_right($event)">
-      <i style="font-size:20px" :class="rightData ? 'el-icon-s-unfold' : 'el-icon-s-fold'"></i>
-    </el-button>
-    <!-- <img src="./../../static/images/you.png" class="shenzuo" @click="show_right($event)" alt /> -->
-    <div class="right_fixed" v-show="bool">
-      <h4>客房快速统计</h4>
-      <div @click="allSos">
-        <!-- <img src="./../assets/images/ic_launcher.png" alt /> -->
-        <i class="el-icon-message-solid" style="font-size:24px;color:#F56C6C;"></i>
-        <span>SOS X {{sos.length}}</span>
-      </div>
-      <div @click="allqingli">
-        <!-- <img src="./../assets/images/qingli.png" alt /> -->
-        <i class="el-icon-delete-solid" style="font-size:24px;color:#67C23A;"></i>
-        <span>清理 X {{qingli.length}}</span>
-      </div>
-      <div @click="alltuifang">
-        <!-- <img src="./../assets/images/tuif.png" alt /> -->
-        <i class="el-icon-s-finance" style="font-size:24px;color:#E6A23C;"></i>
-        <span>退房 X {{tuifang.length}}</span>
-      </div>
-    </div>
   </div>
 </template>
-
 <script>
 import mqtt from "mqtt";
 export default {
   data() {
     return {
-      rightData: true,
+      // rightData: true,
       value: "所有房间",
       Hotel: "", //存储酒店名称
       tableData: [],
+      tempData:[],
       show: false,
       error: "",
       val: "", //搜索框v-model绑定的值
@@ -143,177 +130,80 @@ export default {
       client: this.$store.state.client,
       jdNameLOW_TO_UP: "LOW_TO_UP/" + globalSetting.mqttTopic + "/",
       jdNameUP_TO_LOW: "UP_TO_LOW/" + globalSetting.mqttTopic + "/",
-      img1: false,
-      img2: false,
-      img3: false,
+      needClean: true,
+      needSOS: true,
+      needTuifang: true,
       ic: false,
       ind: "",
-      bool: true,
-      qingli: [],
-      sos: [],
-      tuifang: [],
+      qingli: [],//请求清理房间统计
+      sos: [],//紧急呼叫房间统计
+      tuifang: [],//预约退房统计
       userrank: this.$store.state.userrank
     };
   },
   mounted() {
-    this.changeFloor(this.floorList);
-    this.roomlists();
+    // this.changeFloor(this.floorList);
+    this.getRoomlists();
     // 接收消息处理
     this.client.on("message", (topic, message) => {
       console.log("收到来自", topic, "的消息", message.toString());
       this.msg = JSON.parse(message.toString());
       this.$store.commit("changeCount", this.msg);
-      var ss = topic.match(/\d+/)[0];
-      this.$store.commit("changemqttroom", ss);
-      var lis = $(".box-card11");
-      for (var i in lis) {
-        var li = lis
-          .eq(i)
-          .find(".roomNUM")
-          .text();
-        if (parseInt(li) == parseInt(ss)) {
-          // console.log(parseInt(li) + "******" + parseInt(ss));
-          if (this.msg.DeviceClass == "紧急呼叫") {
-            for (var j in this.msg.DeviceProperty) {
-              if (
-                this.msg.DeviceProperty[j].AttributeName == "状态更改" &&
-                this.msg.DeviceProperty[j].AttributeValue == "开"
-              ) {
-                // this.$notify({
-                //   title: "紧急呼叫",
-                //   message: ss + "房间有紧急呼叫，请尽快处理",
-                //   duration: 0,
-                //   type: "warning"
-                // });
-                $(".img2")
-                  .eq(i)
-                  .show();
-                $(".box-card11")
-                  .eq(i)
-                  .css({ background: "rgb(245, 142, 142)" });
-              } else {
-                $(".img2")
-                  .eq(i)
-                  .hide();
-                $(".box-card11")
-                  .eq(i)
-                  .css({ background: "#fff" });
-              }
-            }
-          } else if (this.msg.DeviceClass == "预约服务") {
-            for (var j in this.msg.DeviceProperty) {
-              if (
-                this.msg.DeviceProperty[j].AttributeName == "状态更改" &&
-                this.msg.DeviceProperty[j].AttributeValue == "开"
-              ) {
-                // this.$notify({
-                //   title: "预约退房",
-                //   message: ss + "房间有预约退房，请尽快处理",
-                //   duration: 0,
-                //   type: "warning"
-                // });
-                $(".img3")
-                  .eq(i)
-                  .show();
-                $(".box-card11")
-                  .eq(i)
-                  .css({ background: "hsl(239, 84%, 76%)", color: "#000" });
-              } else {
-                $(".img3")
-                  .eq(i)
-                  .hide();
-                $(".box-card11")
-                  .eq(i)
-                  .css({ background: "#fff" });
-              }
-            }
-          } else if (this.msg.DeviceClass == "门显") {
-            for (var j in this.msg.DeviceProperty) {
-              if (
-                this.msg.DeviceProperty[j].AttributeName == "清理" &&
-                this.msg.DeviceProperty[j].AttributeValue == "开"
-              ) {
-                // this.$notify({
-                //   title: "清理",
-                //   message: ss + "房间需要清理，请尽快处理",
-                //   duration: 0,
-                //   type: "warning"
-                // });
-                $(".img1")
-                  .eq(i)
-                  .show();
-                $(".box-card11")
-                  .eq(i)
-                  .css({ background: "rgb(52, 226, 52)" });
-              } else {
-                $(".img1")
-                  .eq(i)
-                  .hide();
-                $(".box-card11")
-                  .eq(i)
-                  .css({ background: "#fff" });
-              }
-            }
-          } else if (this.msg.DeviceClass == "取电开关") {
-            for (var j in this.msg.DeviceProperty) {
-              if (
-                this.msg.DeviceProperty[j].AttributeName == "插卡还是拔卡" &&
-                this.msg.DeviceProperty[j].AttributeValue == "插卡"
-              ) {
-                $(".chaka")
-                  .eq(i)
-                  .text("插卡");
-              } else {
-                $(".chaka")
-                  .eq(i)
-                  .text("拔卡");
-              }
-            }
-          } else if (this.msg.DeviceClass == "磁性感应器") {
-            for (var j in this.msg.DeviceProperty) {
-              if (
-                this.msg.DeviceProperty[j].AttributeName == "开关" &&
-                this.msg.DeviceProperty[j].AttributeValue == "开"
-              ) {
-                $(".menci")
-                  .eq(i)
-                  .text("开");
-              } else {
-                $(".menci")
-                  .eq(i)
-                  .text("关");
-              }
-            }
-          }
-        }
-      }
+      var roomNum = topic.match(/\d+/)[0];
+      this.$store.commit("changemqttroom", roomNum);
+      this.handleMessage(roomNum,this.msg);
     });
   },
-  created() {
-    this.getMqtt();
-  },
   methods: {
-    getMqtt() {
+    //请求房间列表信息
+    getRoomlists() {
       this.$axios
         .get(this.portAddress + "/api/home/GetAllRoomInfosNoDeviceInfo")
         .then(res => {
-          for (let i in res.data) {
-            let pic = this.jdNameLOW_TO_UP + res.data[i].RoomNUM;
-            this.client.subscribe(pic, { qos: 1 }, error => {
+          console.log(res.data);
+          this.$store.commit("changeallroom", res.data);
+          this.Hotel = res.data[0].Hotel_Name;
+          this.tempData = res.data;
+
+          this.floorList = _.groupBy(res.data, "Hotel_Floor");
+          this.$set(this.floorList, "所有房间", res.data);
+          for (let j = 0; j < this.tempData.length; j++) {
+            this.ckstatus(this.tempData[j]);
+            let mtopic = this.jdNameLOW_TO_UP + this.tempData[j].RoomNUM;
+            this.client.subscribe(mtopic, { qos: 1 }, error => {
               if (!error) {
-                console.log("订阅成功,主题：", pic);
+                console.log("订阅成功,主题：", mtopic);
               } else {
-                console.log("订阅失败", pic);
+                console.log("订阅失败:", mtopic);
               }
             });
           }
+          this.tableData = this.tempData;//初始界面显示全部房间
         })
         .catch(err => {
           console.log(err);
         });
     },
-    kongt(item) {
-      console.log(item);
+    // 获取下位机，取电开关，门显状态
+    ckstatus(room) {
+      this.$axios
+        .get(
+          this.portAddress +
+            "/api/home/GetAllDeviceStatusByRoom?RoomNUM=" +
+            room.RoomNUM
+        )
+        .then(res => {
+          // console.log(res.data)
+          room.LowerMachine = res.data;
+          this.filterRoomState(room,res.data.DeviceList);
+
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    //房间卡片上的一键开关空调按钮
+    kongtiaoChange(item) {
       item.LowerMachine.DeviceList.forEach(device => {
         if (device.DeviceClass == "温控器") {
           var payload = {
@@ -324,9 +214,7 @@ export default {
             OwinSHA: device.OwinSHA,
             DeviceProperty: []
           };
-
           if (item.kongtiao == true) {
-            // alert(this.jdNameUP_TO_LOW + item.RoomNUM)
             payload.DeviceProperty = [
               { AttributeName: "开关", AttributeValue: "开" }
             ];
@@ -348,321 +236,198 @@ export default {
         }
       });
     },
-    allSos() {
-      console.log(this.sos);
-      this.tableData = this.sos;
-      this.ic = true;
-      $(".img1").hide();
-      $(".img2").show();
-      $(".img3").hide();
-      $(".box-card11").css({ background: "rgb(245, 142, 142)" });
-      for (var i in this.tableData) {
-        this.$set(this.tableData[i], "seletetype", "sos");
+    //筛选显示有服务请求的房间
+    filterNeed(e){
+      if(e.target.innerText.indexOf("紧急呼叫") !== -1){
+        this.tableData = this.tempData.filter(roomObj=>{
+          if(roomObj.needSOS){
+            return roomObj;
+          }
+        })
+
+      }else if(e.target.innerText.indexOf("清理") !== -1){
+        this.tableData = this.tempData.filter(roomObj=>{
+          if(roomObj.needSOS){
+            return roomObj;
+          }
+        })
+
+      }else if(e.target.innerText.indexOf("退房") !== -1){
+        this.tableData = this.tempData.filter(roomObj=>{
+          if(roomObj.needTuifang){
+            return roomObj;
+          }
+        })
       }
+
     },
-    alltuifang() {
-      console.log(this.tuifang);
-      this.tableData = this.tuifang;
-      this.ic = true;
-      $(".img1").hide();
-      $(".img2").hide();
-      $(".img3").show();
-      $(".box-card11").css({ background: "hsl(239, 84%, 76%)" });
-      for (var i in this.tableData) {
-        this.$set(this.tableData[i], "seletetype", "退房");
-      }
-    },
-    allqingli() {
-      console.log(this.qingli);
-      this.tableData = this.qingli;
-      this.ic = true;
-      $(".img1").show();
-      $(".img2").hide();
-      $(".img3").hide();
-      $(".box-card11").css({ background: "rgb(52, 226, 52)" });
-      for (var i in this.tableData) {
-        this.$set(this.tableData[i], "seletetype", "清理");
-      }
-    },
-    delate(item) {
-      // console.log(item);
-      var payload = {
-        LowerMachine_ID: item.LowerMachine.DeviceList[i].LowerMachine_ID,
-        DeviceName: item.LowerMachine.DeviceList[i].DeviceName,
-        DeviceClass: item.LowerMachine.DeviceList[i].DeviceClass,
-        AreaOfRoom: item.LowerMachine.DeviceList[i].AreaOfRoom,
-        OwinSHA: item.LowerMachine.DeviceList[i].OwinSHA,
-        DeviceProperty: []
-      };
-      if (item.seletetype == "sos") {
-        for (var i in item.LowerMachine.DeviceList) {
-          if (item.LowerMachine.DeviceList[i].DeviceClass == "紧急呼叫") {
-            // var payload = {
-            //   LowerMachine_ID: item.LowerMachine.DeviceList[i].LowerMachine_ID,
-            //   DeviceName: item.LowerMachine.DeviceList[i].DeviceName,
-            //   DeviceClass: item.LowerMachine.DeviceList[i].DeviceClass,
-            //   AreaOfRoom: item.LowerMachine.DeviceList[i].AreaOfRoom,
-            //   OwinSHA: item.LowerMachine.DeviceList[i].OwinSHA,
-            //   DeviceProperty: []
-            // };
-            payload.DeviceProperty = [
-              { AttributeName: "状态更改", AttributeValue: "关" }
-            ];
+    //点击关闭服务请求
+    handleRoomState(item, e) {
+      let messageObj = {};
+      if (e.target.classList[0] === "el-icon-delete-solid") {
+        for (const elObj of item.LowerMachine.DeviceList) {
+          if (elObj.DeviceClass === "门显") {
+            messageObj = { ...elObj };
           }
         }
-      } else if (item.seletetype == "清理") {
-        for (var i in item.LowerMachine.DeviceList) {
-          if (item.LowerMachine.DeviceList[i].DeviceClass == "门显") {
-            // var payload = {
-            //   LowerMachine_ID: item.LowerMachine.DeviceList[i].LowerMachine_ID,
-            //   DeviceName: item.LowerMachine.DeviceList[i].DeviceName,
-            //   DeviceClass: item.LowerMachine.DeviceList[i].DeviceClass,
-            //   AreaOfRoom: item.LowerMachine.DeviceList[i].AreaOfRoom,
-            //   OwinSHA: item.LowerMachine.DeviceList[i].OwinSHA,
-            //   DeviceProperty: []
-            // };
-            payload.DeviceProperty = [
-              { AttributeName: "清理", AttributeValue: "关" }
-            ];
+        item.needClean = false;
+        // item.mxstatus = "";
+        this.qingli.splice(this.qingli.indexOf(item), 1);
+        messageObj.DeviceProperty = [
+          { AttributeName: "清理", AttributeValue: "关" }
+        ];
+      } else if (e.target.classList[0] === "el-icon-message-solid") {
+        for (const elObj of item.LowerMachine.DeviceList) {
+          if (elObj.DeviceClass === "紧急呼叫") {
+            messageObj = { ...elObj };
           }
         }
-      } else if (item.seletetype == "退房") {
-        for (var i in item.LowerMachine.DeviceList) {
-          if (item.LowerMachine.DeviceList[i].DeviceClass == "预约服务") {
-            // var payload = {
-            //   LowerMachine_ID: item.LowerMachine.DeviceList[i].LowerMachine_ID,
-            //   DeviceName: item.LowerMachine.DeviceList[i].DeviceName,
-            //   DeviceClass: item.LowerMachine.DeviceList[i].DeviceClass,
-            //   AreaOfRoom: item.LowerMachine.DeviceList[i].AreaOfRoom,
-            //   OwinSHA: item.LowerMachine.DeviceList[i].OwinSHA,
-            //   DeviceProperty: []
-            // };
-            payload.DeviceProperty = [
-              { AttributeName: "状态更改", AttributeValue: "关" }
-            ];
+        item.needSOS = false;
+        this.sos.splice(this.sos.indexOf(item), 1);
+        messageObj.DeviceProperty=[{ AttributeName: "状态更改", AttributeValue: "关" }];
+
+      } else if (e.target.classList[0] === "el-icon-s-finance") {
+        for (const elObj of item.LowerMachine.DeviceList) {
+          if (elObj.DeviceClass === "预约服务") {
+            messageObj = { ...elObj };
           }
         }
+        item.needTuifang = false;
+        this.tuifang.splice(this.tuifang.indexOf(item), 1);
+        messageObj.DeviceProperty = [{ AttributeName: "状态更改", AttributeValue: "关" }];
       }
-      console.log(JSON.stringify(payload));
+      console.log(item);
+      console.log(JSON.stringify(messageObj));
+
       this.client.publish(
         this.jdNameUP_TO_LOW + item.RoomNUM,
-        JSON.stringify(payload)
+        JSON.stringify(messageObj)
       );
     },
-    show_right(e) {
-      // if (
-      //   e.target.src ==
-      //   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVUlEQVRYR+2Xu0rEQBSG/zl5irkUWllYCYKVsPbWglaChaCNoP3uPoBauYIIWln4FJY+RiBzAX2HPZJAlpCsWmySCeg0IUXO/51rzghEPiKyPoYBEEJYAzBm5vzZ+RFCpACmUsq0iIBzbiKEGHeuXBFg5pnW+rwA8N7fArjoE2A+n18ZY64XNeCcOwSw0QcEEX1IKWe51jCKsA+vv9MYfgS890dKqZfcgyzLRkQ0WjVizJwaY55/rQHv/Q2ALaXUXpZlO0mSvK8qXn7PzFOt9WRpCkIIm8x8D2AXwFsOEEI4Y+a7tgAAPCilThsA1tpjInqqCBUA+bu19pKI9luA+FRKHTRS4L1/BHBSE1gAtCDcMFFOwm0ArwDWl4j8AYDS62gpqIY9ahGWIFHbsBqNaIOoBhFvFHfR93Wbw/8bdh2FYaxk0ZfS6Gt59ItJ14X2k/3/NvwC02S0Ibsuo7YAAAAASUVORK5CYII="
-      // ) {
-      //   e.target.src =
-      //     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABfUlEQVRYR+2WsUrDUBSGz+lSXG2X/oeOvoHoajZXN5ciDiIICrroIm0nwUUXHXwBFcEHcLEv4KCLda65XTrURQlYjlTa0KZJFZqbLMkWyD3/x3/Oyf2ZUn44ZX3KAHwHjDGrRLRFRPOW29JV1WcRqfV1fIB2u72jqheWxf3yAH61Rx1YI6L7hACuAGyPAfRfWq3WHBEt24Yol8uNoUa2Bb4DnU5HisWia9v+YH0fwHXdGjO/AIgcRGPMCREdxQB5DmB/bAgHAFVVPRWRwzARY8wjEa3EANAA4IQCDIo38vl8pVAovI+KDSFnBVDV+sSPKKT4FzNvlEqlu1kFp50PzkA15OMzAAe2IP4EmDYTcUBFAqiqIaJNEXmIQyiqRigAM980m82K4zjfoweTWMNdVT0Wkcu01vAWwGuUXVbX0Gaf/7WGGcAgjCzYzoS5XO6Dmd8AfAbvgnVmvk6oFZOXUcKh9AnA4pgD/UDied4eMy/ZdqHX69WHuTDLhJkDP7YepCHJq8/eAAAAAElFTkSuQmCC";
-      //   this.bool = true;
-      // } else {
-      //   e.target.src =
-      //     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVUlEQVRYR+2Xu0rEQBSG/zl5irkUWllYCYKVsPbWglaChaCNoP3uPoBauYIIWln4FJY+RiBzAX2HPZJAlpCsWmySCeg0IUXO/51rzghEPiKyPoYBEEJYAzBm5vzZ+RFCpACmUsq0iIBzbiKEGHeuXBFg5pnW+rwA8N7fArjoE2A+n18ZY64XNeCcOwSw0QcEEX1IKWe51jCKsA+vv9MYfgS890dKqZfcgyzLRkQ0WjVizJwaY55/rQHv/Q2ALaXUXpZlO0mSvK8qXn7PzFOt9WRpCkIIm8x8D2AXwFsOEEI4Y+a7tgAAPCilThsA1tpjInqqCBUA+bu19pKI9luA+FRKHTRS4L1/BHBSE1gAtCDcMFFOwm0ArwDWl4j8AYDS62gpqIY9ahGWIFHbsBqNaIOoBhFvFHfR93Wbw/8bdh2FYaxk0ZfS6Gt59ItJ14X2k/3/NvwC02S0Ibsuo7YAAAAASUVORK5CYII=";
-      //   this.bool = false;
-      // }
-      this.rightData = !this.rightData;
-      this.bool = !this.bool;
-    },
-    changeFloor(val) {
-      this.$store.commit("changeFloor", val);
-    },
     //卡片式跳转到相应房间的方法
-    hand(roomNum, roomstatus) {
-      console.log(roomNum, roomstatus);
-      if (roomstatus == "连接") {
+    jumpTo(roomNum, roomstatus) {
+      // console.log(roomNum, roomstatus);
+      if (roomstatus === "连接") {
         this.$router.push("/equipmentList/" + roomNum);
       }
     },
-    p() {
-      this.val = "";
-      this.error = "";
-    },
-    //当localStorage中还未储存信息时应用此方法获取房间列表
-    roomlists() {
-      this.$axios
-        .get(this.portAddress + "/api/home/GetAllRoomInfosNoDeviceInfo")
-        .then(res => {
-          console.log(res.data);
-          this.$store.commit("changeallroom", res.data);
-          this.Hotel = res.data[0].Hotel_Name;
-          var newList = [];
-          for (var i in res.data) {
-            if (res.data[i].Hotel_Name == this.Hotel) {
-              newList.push(res.data[i]);
-              this.floorList = _.groupBy(newList, "Hotel_Floor");
-              this.$set(this.floorList, "所有房间", newList);
-              this.tableData = newList;
-              this.tableData.sort(this.compare("RoomNUM"));
-            }
-          }
-          for (let j = 0; j < this.tableData.length; j++) {
-            this.ckstatus(this.tableData[j], j);
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    },
-    //排序方法
-    compare(property) {
-      return function(a, b) {
-        var value1 = parseInt(a[property]);
-        var value2 = parseInt(b[property]);
-        return value1 - value2;
-      };
-    },
-    // 获取下位机，取电开关，门显状态
-    ckstatus(room, index) {
-      this.$axios
-        .get(
-          this.portAddress +
-            "/api/home/GetAllDeviceStatusByRoom?RoomNUM=" +
-            room.RoomNUM
-        )
-        .then(res => {
-          // console.log(res.data)
-          room.LowerMachine = res.data;
-          this.$set(room, "kongtiao", "false");
-          // this.$set(room, room.RoomNUM, false);
-          for (var i in res.data.DeviceList) {
-            if (res.data.DeviceList[i].DeviceClass == "取电开关") {
-              for (var j in res.data.DeviceList[i].DeviceProperty) {
-                if (
-                  res.data.DeviceList[i].DeviceProperty[j].AttributeName ==
-                  "插卡还是拔卡"
-                ) {
-                  this.$set(
-                    room,
-                    "qdstatus",
-                    res.data.DeviceList[i].DeviceProperty[j].AttributeValue
-                  );
+    //添加每个房间的门显空调属性
+    filterRoomState(room,list){
+      this.$set(room, "kongtiao", "false");
+      for (const deviceObj of list) {
+            if(deviceObj.DeviceClass === '取电开关'){
+              for (const deviceProperty of deviceObj.DeviceProperty) {
+                if(deviceProperty.AttributeName === '插卡还是拔卡'){
+                  this.$set(room,"qdstatus",deviceProperty.AttributeValue);
                 }
               }
-            }
-            if (res.data.DeviceList[i].DeviceClass == "磁性感应器") {
-              for (var j in res.data.DeviceList[i].DeviceProperty) {
-                if (
-                  res.data.DeviceList[i].DeviceProperty[j].AttributeName ==
-                  "开关"
-                ) {
-                  this.$set(
-                    room,
-                    "mencistatus",
-                    res.data.DeviceList[i].DeviceProperty[j].AttributeValue
-                  );
-                }
-              }
-            }
-            if (res.data.DeviceList[i].DeviceClass == "门显") {
-              for (let g in res.data.DeviceList[i].DeviceProperty) {
-                if (
-                  res.data.DeviceList[i].DeviceProperty[g].AttributeValue ==
-                  "开"
-                ) {
-                  this.$set(
-                    room,
-                    "mxstatus",
-                    res.data.DeviceList[i].DeviceProperty[g].AttributeName
-                  );
-                  if (room.mxstatus == "清理") {
-                    $(".img1")
-                      .eq(index)
-                      .show();
-                    this.qingli = [];
-                    if (this.qingli.indexOf(room) == -1) {
-                      this.qingli.push(room);
-                    }
-                  } else {
-                    $(".img1")
-                      .eq(index)
-                      .hide();
+            }else if(deviceObj.DeviceClass === '磁性感应器'){
+              this.$set(room,"mencistatus",deviceObj.DeviceProperty[0].AttributeValue);
+
+            }else if(deviceObj.DeviceClass === '门显'){
+              for (const deviceProperty of deviceObj.DeviceProperty) {
+                if(deviceProperty.AttributeName === '清理' && deviceProperty.AttributeValue === '开'){
+                  this.$set(room, "mxstatus", "清理");
+                  this.$set(room, "needClean", true);
+                  if (this.qingli.indexOf(room) === -1) {
+                    this.qingli.push(room);
+                  }
+                }else if(deviceProperty.AttributeName === '清理' && deviceProperty.AttributeValue === '关'){
+                  this.$set(room, "mxstatus", "");
+                  this.$set(room, "needClean", false);
+                  if (this.qingli.indexOf(room)!== -1) {
+                    this.qingli.splice(this.qingli.indexOf(room), 1);
                   }
                 }
               }
-            }
-            if (res.data.DeviceList[i].DeviceClass == "温控器") {
-              for (let g in res.data.DeviceList[i].DeviceProperty) {
-                if (
-                  res.data.DeviceList[i].DeviceProperty[g].AttributeName ==
-                  "当前温度"
-                ) {
-                  this.$set(
-                    room,
-                    "nowtelephone",
-                    res.data.DeviceList[i].DeviceProperty[g].AttributeValue
-                  );
+
+            }else if(deviceObj.DeviceClass === '温控器'){
+              for (const deviceProperty of deviceObj.DeviceProperty) {
+                if(deviceProperty.AttributeName === '当前温度'){
+                  this.$set(room,"curTemper",deviceProperty.AttributeValue);
                 }
               }
-            }
-            if (res.data.DeviceList[i].DeviceClass == "预约服务") {
-              for (let g in res.data.DeviceList[i].DeviceProperty) {
-                if (
-                  res.data.DeviceList[i].DeviceProperty[g].AttributeValue ==
-                  "开"
-                ) {
-                  $(".img3")
-                    .eq(index)
-                    .show();
-                  this.tuifang = [];
-                  if (this.tuifang.indexOf(room) == -1) {
+
+            }else if(deviceObj.DeviceClass === '预约服务'){
+              if(deviceObj.DeviceProperty[0].AttributeValue === '开'){
+                this.$set(room,"needTuifang",true);
+                if (this.tuifang.indexOf(room) == -1) {
                     this.tuifang.push(room);
                   }
-                } else {
-                  $(".img3")
-                    .eq(index)
-                    .hide();
+              }else{
+                this.$set(room,"needTuifang",false);
+                if(this.tuifang.indexOf(room)!==-1){
+                  this.tuifang.splice(this.tuifang.indexOf(room),1);
                 }
               }
-            }
-            if (res.data.DeviceList[i].DeviceClass == "紧急呼叫") {
-              for (let g in res.data.DeviceList[i].DeviceProperty) {
-                if (
-                  res.data.DeviceList[i].DeviceProperty[g].AttributeValue ==
-                  "开"
-                ) {
-                  $(".img2")
-                    .eq(index)
-                    .show();
-                  this.sos = [];
-                  if (this.sos.indexOf(room) == -1) {
+
+            }else if(deviceObj.DeviceClass === '紧急呼叫'){
+              if(deviceObj.DeviceProperty[0].AttributeValue === '开'){
+                this.$set(room,"needSOS",true);
+                if (this.sos.indexOf(room) == -1) {
                     this.sos.push(room);
                   }
-                } else {
-                  $(".img2")
-                    .eq(index)
-                    .hide();
+              }else{
+                this.$set(room,"needSOS",false);
+                if(this.sos.indexOf(room) !== -1){
+                  this.sos.splice(this.tuifang.indexOf(room),1);
                 }
               }
             }
           }
-        })
-        .catch(err => {
-          console.log(err);
-        });
     },
-    //选择楼层的方法
+    //按楼层显示的方法
     selected() {
-      this.tableData = [];
-      this.$axios
-        .get(this.portAddress + "/api/home/GetAllRoomInfosNoDeviceInfo")
-        .then(res => {
-          // console.log(res.data)
-          for (var i in res.data) {
-            if (parseInt(res.data[i].Hotel_Floor) == this.value) {
-              this.tableData.push(res.data[i]);
-            } else if (this.value == "所有房间") {
-              this.tableData = res.data;
+      if(this.value === '所有房间'){
+        this.tableData = this.tempData;
+      }else{
+        this.tableData = this.tempData.filter((roomObj)=>{
+          if(roomObj.Hotel_Floor === this.value){
+            return roomObj;
+          }
+        })
+      }
+    },
+    //处理收到的mqtt消息
+    handleMessage(num,msg){
+      for (const room of this.tempData) {
+        if(room.RoomNUM === num){
+          if(msg.DeviceClass === '紧急呼叫'){
+            room.needSOS = msg.DeviceProperty[0].AttributeValue === '开' ? true:false;
+            if(room.needSOS && this.sos.indexOf(room)===-1){
+              this.sos.push(room);
+            }else{
+              this.sos.splice(this.sos.indexOf(room),1);
+            }
+          }else if(msg.DeviceClass === '预约服务'){
+            room.needTuifang = msg.DeviceProperty[0].AttributeValue === '开' ? true:false;
+            if(room.needTuifang && this.tuifang.indexOf(room) === -1){
+              this.tuifang.push(room);
+            }else{
+              this.tuifang.splice(this.tuifang.indexOf(room),1);
+            }
+          }else if(msg.DeviceClass === '磁性感应器'){
+            room.mencistatus = msg.DeviceProperty[0].AttributeValue === '开' ? true:false;
+          }else if(msg.DeviceClass === '取电开关'){
+            for (const arrObj of msg.DeviceProperty) {
+              if(arrObj.AttributeName === '插卡还是拔卡'){
+                room.qdstatus = arrObj.AttributeValue;
+              }
+            }
+          }else if(msg.DeviceClass === '门显'){
+            for (const arrObj of msg.DeviceProperty) {
+              if(arrObj.AttributeName === '清理'){
+                room.needClean = arrObj.AttributeValue === '开'? true:false;
+                if(room.needClean && this.qingli.indexOf(room) === -1){
+                  this.qingli.push(room);
+                }else{
+                  this.qingli.splice(this.qingli.indexOf(room),1);
+                }
+              }
             }
           }
-          for (let j = 0; j < this.tableData.length; j++) {
-            this.ckstatus(this.tableData[j], j); //给房间列表添加属性
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        });
+        }
+      }
     }
   }
 };
@@ -766,14 +531,15 @@ export default {
       margin-left: 80px;
       .state {
         border-radius: 5px;
+        border: 1px solid #eee;
         padding: 4px;
-        transition: background-color .5s,color .5s;
-        -moz-transition: background-color .5s,color .5s;
-        -webkit-transition: background-color .5s,color .5s;
-        -o-transition: background-color .5s,color .5s;
+        transition: background-color 0.5s, color 0.5s;
+        -moz-transition: background-color 0.5s, color 0.5s;
+        -webkit-transition: background-color 0.5s, color 0.5s;
+        -o-transition: background-color 0.5s, color 0.5s;
         &:hover {
-          background-color: #4c5672;
-          color:#fff;
+          background-color: #fff;
+          border: 1px solid rgb(220, 220, 230);
           cursor: pointer;
         }
       }
@@ -897,6 +663,12 @@ export default {
         }
       }
     }
+  }
+}
+.room-state-icon {
+  font-size: 22px;
+  &:hover {
+    cursor: pointer;
   }
 }
 </style>
