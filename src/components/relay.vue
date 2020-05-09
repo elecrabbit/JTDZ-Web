@@ -155,7 +155,7 @@ export default {
               this.list = res.data;
               for (var i in this.list) {
                 var num = parseInt(i) + 1;
-                console.log(parseInt(this.list[i]), num);
+                // console.log(parseInt(this.list[i]), num);
                 if (parseInt(this.list[i]) != num) {
                   $(".relay-list")
                     .eq(num)
@@ -291,7 +291,9 @@ export default {
         }
       }
       if (checked) {
-        subData.ByteArray = arr;
+        subData.ByteArray =this.hexCode;
+        console.log(subData);
+
         this.$axios
           .post(
             this.portAddress + "/api/home/DominateEquipmentNoProcotol",

@@ -2,78 +2,114 @@
 <template>
   <div>
     <!-- <p v-show="false" class="getMsg">{{getMsg}}</p> -->
-    <el-card class="box-card1">
-      <div slot="header" class="clearfix">
-        <span class="title">问题房间</span>
-        <div>
-          <el-button size="mini" @click="yicom" class="bt">已处理</el-button>
-          <el-button size="mini" @click="weicom" class="bt">未处理</el-button>
-          <el-button size="mini" @click="allcom" class="bt">全部</el-button>
-        </div>
+    <el-card class="card-box">
+      <div slot="header" class="card-head">
+        <h2>问题房间</h2>
       </div>
-      <div class="content">
+      <div class="tables">
+        <div>
+          <el-button size="small" @click="searchSOS" type="warning" plain>查询SOS记录</el-button>
+          <el-button size="small" @click="addproblemroom" type="primary" plain>增加问题房间</el-button>
+          <el-button size="small" @click="allcom" type="primary" plain>全部问题房间</el-button>
+          <el-button size="small" @click="yicom" type="info" plain>已处理问题房间</el-button>
+          <el-button size="small" @click="weicom" type="danger" plain>未处理问题房间</el-button>
+        </div>
         <div v-show="active1">
-          <template>
-            <el-table :data="tableData" style="width: 100%">
-              <el-table-column prop="RoomNUM" label="房间号" width="100"></el-table-column>
-              <el-table-column prop="Description" label="问题类型"></el-table-column>
-              <el-table-column prop="SolutionProject" label="解决方式"></el-table-column>
-              <el-table-column prop="SolutionEngineer" label="工程师姓名" width="150"></el-table-column>
-              <el-table-column prop="ReportTime" label="上报时间" width="180"></el-table-column>
-              <el-table-column prop="SolutionTime" label="解决时间" width="180"></el-table-column>
-              <el-table-column label="操作" width="200">
-                <template slot-scope="scope">
-                  <el-button size="mini" @click.stop="handleEdit(scope.$index, scope.row)">处理</el-button>
+          <el-table :data="tableData" height="650">
+            <el-table-column prop="RoomNUM" label="房间号" width="100"></el-table-column>
+            <el-table-column prop="Description" label="问题类型"></el-table-column>
+            <el-table-column prop="SolutionProject" label="解决方式"></el-table-column>
+            <el-table-column prop="SolutionEngineer" label="工程师姓名" width="150"></el-table-column>
+            <el-table-column prop="ReportTime" label="上报时间" width="180"></el-table-column>
+            <el-table-column prop="SolutionTime" label="解决时间" width="180"></el-table-column>
+            <el-table-column label="操作" width="200">
+              <template slot-scope="scope">
+                <el-button size="mini" @click.stop="handleEdit(scope.$index, scope.row)">处理</el-button>
 
-                  <el-popover placement="top-end" width="160" v-model="scope.row.bool">
-                    <p>确定要删除该房间信息吗？</p>
-                    <div style="text-align: right; margin: 0">
-                      <el-button size="mini" type="text" @click="scope.row.bool = false">取消</el-button>
-                      <el-button type="primary" size="mini" @click="handleDelete(scope.$index, scope.row)">确定</el-button>
-                    </div>
-                    <el-button slot="reference" size="mini" type="danger">删除</el-button>
-                  </el-popover>
-                  <!-- <el-button size="mini" type="danger" @click.stop="handleDelete(scope.$index, scope.row)">删除</el-button> -->
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
+                <el-popover placement="top-end" width="160" v-model="scope.row.bool">
+                  <p>确定要删除该房间信息吗？</p>
+                  <div style="text-align: right; margin: 0">
+                    <el-button size="mini" type="text" @click="scope.row.bool = false">取消</el-button>
+                    <el-button
+                      type="primary"
+                      size="mini"
+                      @click="handleDelete(scope.$index, scope.row)"
+                    >确定</el-button>
+                  </div>
+                  <el-button slot="reference" size="mini" type="danger">删除</el-button>
+                </el-popover>
+                <!-- <el-button size="mini" type="danger" @click.stop="handleDelete(scope.$index, scope.row)">删除</el-button> -->
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
         <div v-show="active2">
-          <template>
-            <el-table :data="tableData2" style="width: 100%">
-              <el-table-column prop="RoomNUM" label="房间号" width="200"></el-table-column>
-              <el-table-column prop="Description" label="问题类型"></el-table-column>
-              <el-table-column prop="ReportTime" label="上报时间" width="250"></el-table-column>
-              <el-table-column label="操作" width="200">
-                <template slot-scope="scope">
-                  <el-button size="mini" @click.stop="handleEdit(scope.$index, scope.row)">处理</el-button>
-                  <el-button size="mini" type="danger" @click.stop="handleDelete(scope.$index, scope.row)">删除</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
+          <el-table :data="tableData2" height="650">
+            <el-table-column prop="RoomNUM" label="房间号" width="200"></el-table-column>
+            <el-table-column prop="Description" label="问题类型"></el-table-column>
+            <el-table-column prop="ReportTime" label="上报时间" width="250"></el-table-column>
+            <el-table-column label="操作" width="200">
+              <template slot-scope="scope">
+                <el-button size="mini" @click.stop="handleEdit(scope.$index, scope.row)">处理</el-button>
+                <el-button
+                  size="mini"
+                  type="danger"
+                  @click.stop="handleDelete(scope.$index, scope.row)"
+                >删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
         <div v-show="active3">
-          <template>
-            <el-table :data="tableData3" style="width: 100%">
-              <el-table-column prop="RoomNUM" label="房间号" width="150"></el-table-column>
-              <el-table-column prop="Description" label="问题类型"></el-table-column>
-              <el-table-column prop="SolutionProject" label="解决方式"></el-table-column>
-              <el-table-column prop="SolutionEngineer" label="工程师姓名" width="150"></el-table-column>
-              <el-table-column prop="SolutionTime" label="解决时间" width="150"></el-table-column>
-              <el-table-column label="操作" width="200">
-                <template slot-scope="scope">
-                  <el-button size="mini" @click.stop="handleEdit(scope.$index, scope.row)">处理</el-button>
-                  <el-button size="mini" type="danger" @click.stop="handleDelete(scope.$index, scope.row)">删除</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
+          <el-table :data="tableData3" height="650">
+            <el-table-column prop="RoomNUM" label="房间号" width="150"></el-table-column>
+            <el-table-column prop="Description" label="问题类型"></el-table-column>
+            <el-table-column prop="SolutionProject" label="解决方式"></el-table-column>
+            <el-table-column prop="SolutionEngineer" label="工程师姓名" width="150"></el-table-column>
+            <el-table-column prop="SolutionTime" label="解决时间" width="150"></el-table-column>
+            <el-table-column label="操作" width="200">
+              <template slot-scope="scope">
+                <el-button size="mini" @click.stop="handleEdit(scope.$index, scope.row)">处理</el-button>
+                <el-button
+                  size="mini"
+                  type="danger"
+                  @click.stop="handleDelete(scope.$index, scope.row)"
+                >删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
-        <el-button size="small" @click="addproblemroom" class="addbtn">增加问题房间</el-button>
+        <div v-show="showSOS">
+          <el-table :data="sosList" height="650" stripe>
+            <el-table-column prop="roomNum"  label="房间" ></el-table-column>
+            <el-table-column prop="RecordTime" label="时间" ></el-table-column>
+            <el-table-column prop="SOSStatus" label="状态" sortable></el-table-column>
+          </el-table>
+        </div>
       </div>
     </el-card>
+    <el-dialog title="查询SOS记录" :visible.sync="searchForm">
+      <el-form :model="sosForm">
+        <el-form-item label="房间号：" :label-width="formLabelWidth">
+          <el-input v-model="sosForm.roomNum" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="时间段：" :label-width="formLabelWidth">
+          <el-date-picker
+            v-model="sosForm.pickTime"
+            type="datetimerange"
+            :picker-options="pickerOptions"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="yyyy-MM-dd HH:MM:SS"
+          ></el-date-picker>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="searchForm = false">取 消</el-button>
+        <el-button type="primary" @click="subSOS">确 定</el-button>
+      </div>
+    </el-dialog>
     <el-dialog title="增加问题房间" :visible.sync="dialogFormVisible">
       <el-form :model="form" class="form">
         <el-form-item label="房间号：" :label-width="formLabelWidth">
@@ -113,213 +149,246 @@
 
 <script>
 export default {
-  data()  {
+  data() {
     return {
       tableData: [],
       tableData2: [],
       tableData3: [],
+      sosList:[],
       dialogFormVisible: false,
       dialogFormVisible2: false,
-      formLabelWidth: '120px',
+      searchForm: false,
+      formLabelWidth: "120px",
       client: this.$store.state.client,
-      jdNameUP_TO_UP: "UP_TO_UP/河南阿宝蜀黍的酒店/AlarmReport",
-      // jdNameUP_TO_LOW: "UP_TO_UP/河南阿宝蜀黍的酒店/AlarmReport",
+      jdNameUP_TO_UP:
+        "UP_TO_UP/" + globalSetting.mqttTopic + "/" + "AlarmReport",
       portAddress: this.$store.state.portAddress,
       form: {
-        id: '',
-        roomNum: '',
-        problemtype: '',
-        SolutionProject: '',
-        SolutionEngineer: ''
+        id: "",
+        roomNum: "",
+        problemtype: "",
+        SolutionProject: "",
+        SolutionEngineer: ""
       },
-      nowdata: '',
+      sosForm: {
+        roomNum: "",
+        pickTime: ""
+      },
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            }
+          }
+        ]
+      },
+      currentTime: "",
       active1: true,
       active2: false,
       active3: false,
-      userrank: this.$store.state.userrank,
-    }
+      showSOS:false,
+      userrank: this.$store.state.userrank
+    };
   },
-  mounted()  {
-    this.geterrorlist()
-
-  },
-  created()  {
-    this.getMqtt()
+  mounted() {
+    this.getMqtt();
+    this.geterrorlist();
   },
   methods: {
-    getMqtt()    {
-      // var pic = this.jdNameLOW_TO_UP 
-      this.client.subscribe(this.jdNameUP_TO_UP, { qos: 1 }, (error) =>      {
-        if (!error)        {
-          console.log('订阅成功')
-        } else        {
-          console.log('订阅失败')
+    getMqtt() {
+      this.client.subscribe(this.jdNameUP_TO_UP, { qos: 1 }, error => {
+        if (!error) {
+          console.log("订阅成功");
+        } else {
+          console.log("订阅失败");
         }
-      })
-      // console.log(this.userrank)
-      // if (this.userrank == '工程部')      {
-      //   // 接收消息处理
-      //   this.client.on('message', (topic, message) =>        {
-      //     console.log('收到来自', topic, '的消息', message.toString())
-      //     this.msg = JSON.parse(message.toString())
-      //     console.log(this.msg)
-      //     if (this.msg.type == 'problem')          {
-      //       this.$notify({
-      //         title: '维修',
-      //         message: this.msg.RoomNUM + '房间有维修处理，请尽快解决',
-      //         duration: 0,
-      //         type: 'warning'
-      //       });
-      //     }
-      //   })
-
-      // }
-
-
+      });
     },
-
-
-
-    geterrorlist()    {
+    geterrorlist() {
       this.$axios
-        .get(
-          this.portAddress + "/api/FaultReport/GetAllFault")
-        .then(res =>        {
-          console.log(res.data)
-          this.tableData = res.data
-          for (var i in res.data)          {
+        .get(this.portAddress + "/api/FaultReport/GetAllFault")
+        .then(res => {
+          console.log(res.data);
+          this.tableData = res.data;
+          for (var i in res.data) {
             this.$set(res.data[i], "bool", false);
-            if (res.data[i].SolutionEngineer == '')            {
-              this.tableData2.push(res.data[i])
-            } else            {
-              this.tableData3.push(res.data[i])
+            if (res.data[i].SolutionEngineer == "") {
+              this.tableData2.push(res.data[i]);
+            } else {
+              this.tableData3.push(res.data[i]);
             }
           }
-
         });
     },
-    allcom()    {
+    allcom() {
       this.active1 = true;
       this.active2 = false;
       this.active3 = false;
+      this.showSOS = false;
     },
-    yicom()    {
+    yicom() {
       this.active1 = false;
       this.active2 = false;
       this.active3 = true;
+      this.showSOS = false;
     },
-    weicom()    {
+    weicom() {
       this.active1 = false;
       this.active2 = true;
       this.active3 = false;
+      this.showSOS = false;
     },
-    addproblemroom()    {
+    addproblemroom() {
       this.dialogFormVisible = true;
-      this.form.roomNum = '';
-      this.form.problemtype = '';
+      this.form.roomNum = "";
+      this.form.problemtype = "";
     },
-    getdata()    {
-      var data = Date.parse(new Date());
-      var date = new Date(data);
-      var y = 1900 + date.getYear();
-      var m = "0" + (date.getMonth() + 1);
-      var d = "0" + date.getDate();
-      var hh = "0" + date.getHours();
-      var mm = "0" + date.getMinutes();
-      var ss = "0" + date.getSeconds();
-      this.nowdata = y + "-" + m.substring(m.length - 2, m.length) + "-" + d.substring(d.length - 2, d.length) + ' ' + hh.substring(hh.length - 2, hh.length) + ":" + mm.substring(mm.length - 2, mm.length) + ":" + ss.substring(ss.length - 2, ss.length);
+    searchSOS() {
+      this.searchForm = true;
     },
-    addproblemroom2()    {
-      this.dialogFormVisible = false;
-      this.getdata()
-      this.$axios
-        .put(
-          this.portAddress + "/api/FaultReport/FaultTriggerReport", {
-          "RoomNUM": this.form.roomNum,
-          "Description": this.form.problemtype,
-          "ReportTime": this.nowdata,
-        })
-        .then(res =>        {
-          console.log('成功')
-          this.geterrorlist()
-          var payload = {
-            "type": "problem",
-            "RoomNUM": this.form.roomNum,
-            "Description": this.form.problemtype,
-            "ReportTime": this.nowdata,
+    subSOS() {
+      console.log(this.sosForm);
+      if(this.sosForm.roomNum && this.sosForm.pickTime.length>0){
+        this.$axios
+        .get(this.portAddress
+          + "/api/home/GetSOSRecordDetailByRoom?RoomNUM="
+          +this.sosForm.roomNum
+          +"&StartTime="
+          +this.sosForm.pickTime[0]
+          +"&EndTime="
+          +this.sosForm.pickTime[1])
+        .then(res=>{
+          if(res.data.length){
+            this.active1 = false;
+            this.active2 = false;
+            this.active3 = false;
+            this.searchForm = false;
+            this.showSOS = true;
+            this.sosList = res.data;
+            this.sosList.forEach(item =>{
+              item.roomNum = this.sosForm.roomNum;
+            })
+            console.log(this.sosList);
+          }else{
+            this.$message({
+              message:'未查询到记录',
+              type:'warning'
+            })
           }
-          console.log(payload)
+        }).catch(e=>{
+          this.searchForm = false;
+          this.$message({
+              message:'网络错误:'+e,
+              type:'warning'
+            })
+        });
+      }else{
+        this.$message({
+          message:'请输入完整信息',
+          type:'warning'
+        })
+      }
+
+    },
+    formatTime() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+      const second = date.getSeconds();
+      const formatNumber = n => {
+        n = n.toString();
+        return n[1] ? n : "0" + n;
+      };
+      this.currentTime =
+        [year, month, day].map(formatNumber).join("-") +
+        " " +
+        [hour, minute, second].map(formatNumber).join(":");
+    },
+    addproblemroom2() {
+      this.dialogFormVisible = false;
+      this.formatTime();
+      this.$axios
+        .put(this.portAddress + "/api/FaultReport/FaultTriggerReport", {
+          RoomNUM: this.form.roomNum,
+          Description: this.form.problemtype,
+          ReportTime: this.currentTime
+        })
+        .then(res => {
+          console.log("成功");
+          this.geterrorlist();
+          var payload = {
+            type: "problem",
+            RoomNUM: this.form.roomNum,
+            Description: this.form.problemtype,
+            ReportTime: this.currentTime
+          };
+          console.log(payload);
           this.client.publish(this.jdNameUP_TO_UP, JSON.stringify(payload));
           this.$store.commit("changemqttroom2", this.form.roomNum);
         });
     },
-    handleEdit(index, row)    {
+    handleEdit(index, row) {
       this.dialogFormVisible2 = true;
       this.form.id = row.ID;
-      this.form.roomNum = row.RoomNUM
-      this.form.problemtype = row.Description
-      this.form.SolutionProject = ''
-      this.form.SolutionEngineer = ''
+      this.form.roomNum = row.RoomNUM;
+      this.form.problemtype = row.Description;
+      this.form.SolutionProject = "";
+      this.form.SolutionEngineer = "";
     },
-    handleEdit2()    {
+    handleEdit2() {
       this.dialogFormVisible2 = false;
-      this.getdata()
+      this.formatTime();
       this.$axios
-        .post(
-          this.portAddress + "/api/FaultReport/FaultDealWith", {
-          "ID": this.form.id,
-          "SolutionEngineer": this.form.SolutionEngineer,
-          "SolutionProject": this.form.SolutionProject,
-          "SolutionTime": this.nowdata,
+        .post(this.portAddress + "/api/FaultReport/FaultDealWith", {
+          ID: this.form.id,
+          SolutionEngineer: this.form.SolutionEngineer,
+          SolutionProject: this.form.SolutionProject,
+          SolutionTime: this.currentTime
         })
-        .then(res =>        {
-          console.log('成功')
-          this.geterrorlist()
+        .then(res => {
+          console.log("成功");
+          this.geterrorlist();
         });
     },
-    handleDelete(index, row)    {
+    handleDelete(index, row) {
       this.$axios
-        .delete(
-          this.portAddress + "/api/FaultReport/FaultDelete?id=" + row.ID)
-        .then(res =>        {
-          console.log('成功')
-          this.geterrorlist()
+        .delete(this.portAddress + "/api/FaultReport/FaultDelete?id=" + row.ID)
+        .then(res => {
+          console.log("成功");
+          this.geterrorlist();
         });
-    },
+    }
   }
-
-}
+};
 </script>
 
 <style lang="less" scoped>
-.el-card {
-  min-height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  .clearfix {
-    display: flex;
-    justify-content: space-between;
-    .title {
-      color: rgb(245, 46, 20);
-      font-size: 25px;
-      // font-weight: 600;
-    }
-    .bt {
-      background: rgb(21, 174, 245);
-      color: #fff;
-    }
+.card-box {
+  height: 100%;
+  .card-head {
+    width: 80%;
+    margin: 0 auto;
   }
-  .content {
-    // margin:10px;
-    position: relative;
-    padding-bottom: 50px;
-    .addbtn {
-      background: rgb(5, 105, 151);
-      position: absolute;
-      bottom: 0px;
-      right: 10px;
-      color: #fff;
-    }
+  .tables {
+    width: 80%;
+    margin: 0 auto;
   }
 }
 </style>

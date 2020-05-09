@@ -3,7 +3,7 @@
   <div class="userCentre">
     <el-button type="primary" class="head" @click="toAddUser">添加用户</el-button>
     <template>
-      <el-table :data="tableData" border style="width: 100%">
+      <el-table :data="tableData"  style="width: 70%;margin:5px auto;" height="650">
         <el-table-column prop="UserName" label="用户名"></el-table-column>
         <el-table-column prop="UserID" label="用户ID"></el-table-column>
         <!-- <el-table-column prop="UserPassWord" label="用户密码" ></el-table-column> -->
@@ -132,15 +132,15 @@ export default {
           type: "warning"
         })
       }
-      else     
+      else
       {
         // var isSuperAdmin = false;
         // var isNomalAdmin = false;
         var isExist = false;
 
-        for (var i in this.tableData)      
+        for (var i in this.tableData)
         {
-          if (this.tableData[i].UserName == this.telephone1) 
+          if (this.tableData[i].UserName == this.telephone1)
           {
 
             isExist = true;
@@ -156,9 +156,9 @@ export default {
           }
         }
 
-        if (!isExist)       
+        if (!isExist)
         {
-          if (this.userrank == "超级管理员")          
+          if (this.userrank == "超级管理员")
           {
             this.$axios
 
@@ -171,16 +171,16 @@ export default {
                 console.log("失败");
               });
           }
-          else if (this.userrank == "管理员")         
+          else if (this.userrank == "管理员")
           {
-            if (this.usertype == '超级管理员')            
+            if (this.usertype == '超级管理员')
             {
               this.$message({
                 message: "由于权限限制，你不能添加超级管理员",
                 type: "warning"
               });
             }
-            else            
+            else
             {
               this.$axios
                 .put(this.portAddress + "/api/User/PutUserInfo", user)
@@ -193,7 +193,7 @@ export default {
                 });
             }
           }
-          else          
+          else
           {
             this.$message({
               message: "由于权限限制，你不能添加用户，如果需要，请找管理员",
@@ -290,7 +290,7 @@ export default {
           this.$message({
             type: 'info',
             message: '已取消删除'
-          });          
+          });
         });
 
     }
