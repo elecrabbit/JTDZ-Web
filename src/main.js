@@ -9,7 +9,7 @@ Vue.use(Vuex)
 import Router from 'vue-router'
 const routerPush = Router.prototype.push
 Router.prototype.push = function push(location) {
-  return routerPush.call(this, location).catch(error=> error)
+  return routerPush.call(this, location).catch(error => error)
 }
 
 
@@ -21,6 +21,8 @@ Vue.use(VueAxios, axios)
 
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
+import './assets/css/iconfont.css';
+
 Vue.use(ElementUI);
 
 import _ from 'lodash';
@@ -30,14 +32,14 @@ Vue.prototype._ = _;
 // 使用 router.beforeEach 注册一个全局前置守卫，判断用户是否登陆
 router.beforeEach((to, from, next) => {
   if (to.meta.needLogin) {
-    if(localStorage.getItem("token")){
+    if (localStorage.getItem("token")) {
       next();
-    }else {
+    } else {
       next('/login');
     }
-  }else {
-      next();
-    }
+  } else {
+    next();
+  }
 });
 
 

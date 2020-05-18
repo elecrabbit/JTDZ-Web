@@ -1,9 +1,6 @@
 <template>
   <div>
     <div class="btn">
-      <!-- <el-button type="primary" @click="roomSort">房间号排序</el-button> -->
-      <!-- <el-button type="primary" @click="timeSort">剩余时间排序</el-button> -->
-      <!-- <el-button type="primary" @click="keySort">令牌排序</el-button> -->
       <el-button type="primary" @click="decode">解密</el-button>
     </div>
     <el-table
@@ -12,7 +9,7 @@
       tooltip-effect="dark"
       style="width: 70%;margin:5px auto;"
       height="70%"
-      :default-sort = "{prop: 'RoomNUM'}"
+      :default-sort="{prop: 'RoomNUM'}"
       @selection-change="handleSelectionChange"
       @row-click="singleDecode"
     >
@@ -54,26 +51,26 @@ export default {
   mounted() {
     this.getAllRoom();
   },
-  filters:{
-    getRoomNum(rooms){
+  filters: {
+    getRoomNum(rooms) {
       let arr = [];
-      if(Array.isArray(rooms)){
+      if (Array.isArray(rooms)) {
         rooms.forEach(item => {
-          arr.push(item.RoomNUM)
+          arr.push(item.RoomNUM);
         });
         return arr;
-      }else{
-        return rooms.RoomNUM
+      } else {
+        return rooms.RoomNUM;
       }
     },
-    getSecretKey(rooms){
+    getSecretKey(rooms) {
       let keys = [];
-      if(Array.isArray(rooms)){
+      if (Array.isArray(rooms)) {
         rooms.forEach(item => {
-          keys.push(item.secretKey)
+          keys.push(item.secretKey);
         });
-        return [...new Set(keys)] //去除重复的key
-      }else{
+        return [...new Set(keys)]; //去除重复的key
+      } else {
         return rooms.secretKey;
       }
     }
@@ -89,7 +86,6 @@ export default {
             this.getencrytion(res.data[i]);
           }
           this.tableData = res.data;
-          // this.tableData.sort(this.compare("RoomNUM"));
         })
         .catch(err => {
           console.log(err);
@@ -121,53 +117,14 @@ export default {
           console.log(err);
         });
     },
-    // compare(property) {
-    //   console.log(property);
-    //   return function(a, b) {
-    //     var value1 = parseInt(a[property]);
-    //     var value2 = parseInt(b[property]);
-    //     // console.log(value1, value2)
-    //     return value1 - value2;
-    //   };
-    // },
-    // compare1(property, property1) {
-    //   console.log(property);
-    //   return function(a, b) {
-    //     var value1 = a[property][property1];
-    //     var value2 = b[property][property1];
-    //     // console.log(a, b)
-    //     // console.log(value1, value2)
-    //     return value1 - value2;
-    //   };
-    // },
-    // compare2(property) {
-    //   console.log(property);
-    //   return function(a, b) {
-    //     var value1 = parseInt(a[property], 16);
-    //     var value2 = parseInt(b[property], 16);
-    //     // console.log(value1, value2)
-    //     return value1 - value2;
-    //   };
-    // },
-    // roomSort() {
-    //   this.tableData.sort(this.compare("RoomNUM"));
-    // },
-    // timeSort() {
-    //   this.tableData.sort(this.compare1("Time", "TimeStamp"));
-    // },
-    // keySort() {
-    //   this.tableData.sort(this.compare2("secretKey"));
-    // },
     handleSelectionChange(val) {
       this.selectRoom = val;
       console.log(this.selectRoom);
-
     },
-    singleDecode(row){
+    singleDecode(row) {
       this.selectRoom = row;
-      console.log(this.selectRoom)
+      console.log(this.selectRoom);
       this.decode();
-
     },
     decode() {
       if (this.selectRoom.length == 0) {

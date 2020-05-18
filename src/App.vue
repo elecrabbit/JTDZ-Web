@@ -50,7 +50,7 @@ export default {
               duration: 0,
               type: "warning"
             });
-            this.playSound("../static/clean.mp3");
+            this.playSound("../static/audios/clean.mp3");
           }
         }
       } else if (dd.DeviceClass == "预约服务") {
@@ -65,7 +65,7 @@ export default {
               duration: 0,
               type: "warning"
             });
-            this.playSound("../static/yuyue.mp3");
+            this.playSound("../static/audios/yuyue.mp3");
           }
         }
       } else if (dd.DeviceClass == "紧急呼叫") {
@@ -81,7 +81,7 @@ export default {
               duration: 0,
               type: "warning"
             });
-            this.playSound("../static/sos.mp3");
+            this.playSound("../static/audios/sos.mp3");
           }
         }
       } else if (dd.type == "problem") {
@@ -91,7 +91,7 @@ export default {
           duration: 0,
           type: "warning"
         });
-        this.playSound("../static/fix.mp3");
+        this.playSound("../static/audios/fix.mp3");
       }
     }
   },
