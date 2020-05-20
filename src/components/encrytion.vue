@@ -92,19 +92,6 @@ export default {
         });
         this.getLeaveTimeAndKey(JSON.stringify(roomNums));
       }
-      // this.$axios
-      //   .get(this.portAddress + "/api/home/GetAllRoomInfosNoDeviceInfo")
-      //   .then(res => {
-      //     console.log(res.data);
-      //     for (var i in res.data) {
-      //       this.getLeaveTime(res.data[i]);
-      //       this.getencrytion(res.data[i]);
-      //     }
-      //     this.tableData = res.data;
-      //   })
-      //   .catch(err => {
-      //     console.log(err);
-      //   });
     },
     getLeaveTimeAndKey(arr) {
       this.$axios
@@ -120,7 +107,6 @@ export default {
               }
             });
             this.tableData = this.roomList;
-            console.log(this.tableData);
           }
         })
         .catch(err => {
@@ -128,39 +114,13 @@ export default {
           console.log(err);
         });
     },
-    // getLeaveTime(data) {
-    //   this.$axios
-    //     .get(
-    //       this.portAddress + "/api/Home/QueryLeaveTime?RoomNUM=" + data.RoomNUM
-    //     )
-    //     .then(res => {
-    //       //   console.log(res)
-    //       this.$set(data, "Time", res.data);
-    //     })
-    //     .catch(err => {
-    //       console.log(err);
-    //     });
-    // },
-    // getencrytion(data) {
-    //   this.$axios
-    //     .get(
-    //       this.portAddress + "/api/Home/QuerySecretKey?RoomNUM=" + data.RoomNUM
-    //     )
-    //     .then(res => {
-    //       //   console.log(res)
-    //       this.$set(data, "secretKey", res.data);
-    //     })
-    //     .catch(err => {
-    //       console.log(err);
-    //     });
-    // },
+
     handleSelectionChange(val) {
       this.selectRoom = val;
       console.log(this.selectRoom);
     },
     singleDecode(row) {
       this.selectRoom = row;
-      console.log(this.selectRoom);
       this.decode();
     },
     decode() {

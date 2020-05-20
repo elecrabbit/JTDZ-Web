@@ -59,6 +59,9 @@
           </div>
           故障房 X {{guzhangfang.length}}
         </div>
+        <div style="margin-left:100px;">
+          <el-button type="text" @click="clearStorage">清除缓存</el-button>
+        </div>
       </div>
     </div>
     <ul class="roomlist">
@@ -154,8 +157,6 @@ import mqtt from "mqtt";
 export default {
   data() {
     return {
-      // rightData: true,
-      // roomStatusOptions: ["空房", "钟点房", "日租房", "长租房"],
       value: "所有房间",
       Hotel: "", //存储酒店名称
       tableData: [],
@@ -166,8 +167,6 @@ export default {
       floorList: "", //楼层列表
       msg: "",
       addtopic: [],
-      portAddress: this.$store.state.portAddress,
-      client: this.$store.state.client,
       jdNameLOW_TO_UP: "LOW_TO_UP/" + globalSetting.mqttTopic + "/",
       jdNameUP_TO_LOW: "UP_TO_LOW/" + globalSetting.mqttTopic + "/",
       needClean: true,
@@ -183,12 +182,23 @@ export default {
       rizufang: [],
       changzufang: [],
       guzhangfang: [],
+      client: this.$store.state.client,
+      portAddress: this.$store.state.portAddress,
       userrank: this.$store.state.userrank
     };
   },
   mounted() {
-    // this.changeFloor(this.floorList);
-    this.getRoomlists();
+    // 如果有本地房间信息就不再请求后台
+    if (localStorage.getItem("AllRoomInfosNoDeviceInfo")) {
+      console.log("have Storage");
+      this.tempData = JSON.parse(
+        localStorage.getItem("AllRoomInfosNoDeviceInfo")
+      );
+      this.initialRoom(this.tempData);
+    } else {
+      console.log("no Storage");
+      this.getRoomlists();
+    }
     // 接收消息处理
     this.client.on("message", (topic, message) => {
       console.log("收到来自", topic, "的消息", message.toString());
@@ -201,6 +211,43 @@ export default {
   },
 
   methods: {
+    //请求房间列表信息
+    getRoomlists() {
+      this.$axios
+        .get(this.portAddress + "/api/home/GetAllRoomInfosNoDeviceInfo")
+        .then(res => {
+          console.log(res.data);
+          this.tempData = res.data;
+          localStorage.setItem(
+            "AllRoomInfosNoDeviceInfo",
+            JSON.stringify(res.data)
+          );
+          this.$store.commit("changeallroom", res.data);
+          this.initialRoom(this.tempData);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    //初始化房间信息
+    initialRoom(list) {
+      this.Hotel = list[0].Hotel_Name;
+      this.computRoomStatus(list);
+      this.floorList = _.groupBy(list, "Hotel_Floor");
+      this.$set(this.floorList, "所有房间", list);
+      for (let j = 0; j < list.length; j++) {
+        this.ckstatus(list[j]);
+        let mtopic = this.jdNameLOW_TO_UP + list[j].RoomNUM;
+        this.client.subscribe(mtopic, { qos: 1 }, error => {
+          if (!error) {
+            console.log("订阅成功,主题：", mtopic);
+          } else {
+            console.log("订阅失败:", mtopic);
+          }
+        });
+      }
+      this.tableData = list; //初始界面显示全部房间
+    },
     //统计房间状态数量
     computRoomStatus(list) {
       this.guzhangfang = [];
@@ -242,36 +289,8 @@ export default {
         .then(res => {
           if (res.status >= 200) {
             console.log("success");
+            this.computRoomStatus(this.tempData);
           }
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    },
-    //请求房间列表信息
-    getRoomlists() {
-      this.$axios
-        .get(this.portAddress + "/api/home/GetAllRoomInfosNoDeviceInfo")
-        .then(res => {
-          console.log(res.data);
-          this.$store.commit("changeallroom", res.data);
-          this.Hotel = res.data[0].Hotel_Name;
-          this.tempData = res.data;
-          this.computRoomStatus(this.tempData);
-          this.floorList = _.groupBy(res.data, "Hotel_Floor");
-          this.$set(this.floorList, "所有房间", res.data);
-          for (let j = 0; j < this.tempData.length; j++) {
-            this.ckstatus(this.tempData[j]);
-            let mtopic = this.jdNameLOW_TO_UP + this.tempData[j].RoomNUM;
-            this.client.subscribe(mtopic, { qos: 1 }, error => {
-              if (!error) {
-                console.log("订阅成功,主题：", mtopic);
-              } else {
-                console.log("订阅失败:", mtopic);
-              }
-            });
-          }
-          this.tableData = this.tempData; //初始界面显示全部房间
         })
         .catch(err => {
           console.log(err);
@@ -286,9 +305,10 @@ export default {
             room.RoomNUM
         )
         .then(res => {
-          // console.log(res.data)
-          room.LowerMachine = res.data;
-          this.filterRoomState(room, res.data.DeviceList);
+          if (res.data) {
+            room.LowerMachine = res.data;
+            this.filterRoomState(room, res.data.DeviceList);
+          }
         })
         .catch(err => {
           console.log(err);
@@ -393,6 +413,9 @@ export default {
       }
       // console.log(e.target.id);
     },
+    clearStorage() {
+      localStorage.removeItem("AllRoomInfosNoDeviceInfo");
+    },
     //点击关闭服务请求
     handleRoomState(item, e) {
       let messageObj = {};
@@ -447,9 +470,9 @@ export default {
       }
     },
     //添加每个房间的门显空调属性
-    filterRoomState(room, list) {
+    filterRoomState(room, deviceList) {
       this.$set(room, "kongtiao", "false");
-      for (const deviceObj of list) {
+      for (const deviceObj of deviceList) {
         if (deviceObj.DeviceClass === "取电开关") {
           for (const deviceProperty of deviceObj.DeviceProperty) {
             if (deviceProperty.AttributeName === "插卡还是拔卡") {
