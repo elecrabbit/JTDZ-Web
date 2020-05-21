@@ -50,26 +50,31 @@
             <el-button size="mini" type="danger" @click="resetList">重置</el-button>
 
             <el-button size="mini" type="success" @click="subList(inputRoom,select)">提交</el-button>
-
           </el-row>
         </div>
 
-        <div class="w-70" v-show="bool">
-          <h4>如需特殊配置，请在下方输入配置码：</h4>
-          <br />
+        <div class="w-70">
+          <h4>如需特殊配置，请在下方输入配置码或打开txt文件：</h4>
           <el-input type="textarea" :rows="10" placeholder="请输入十六进制代码,以空格隔开" v-model="hexCode"></el-input>
-          <div style="margin-top:10px;float:right;">
-            <el-button size="mini" type="primary" @click="subHex(inputRoom)">提交配置码</el-button>
+          <div style class="upload-box">
+            <el-upload
+              :action="this.portAddress+'/api/File/PostFiles'"
+              :multiple="false"
+              :show-file-list="false"
+              :on-success="handleSuccess"
+              :before-upload="beforeUpload"
+              :on-change="handleChange"
+            >
+              <el-button size="small" type="primary">打开txt文件</el-button>
+            </el-upload>
+            <el-button
+              size="small"
+              type="primary"
+              @click="subHex(inputRoom)"
+              style="margin-left:10px;"
+            >提交配置码</el-button>
           </div>
         </div>
-        <!-- <div v-if="secondBoard">
-          <div style="color:blue;margin:10px 0;">继电器板 2：</div>
-          <div v-for="i in 21" :key="i" class="relay-list-title">k{{ i }}</div>
-          <div class="clearfix"></div>
-          <transition-group name="flip-list" tag="div">
-            <div v-for="(item, index) in list" @dragstart="dragstart(index, $event)" @drop="drop(item, index, $event)" @dragend="dragend(item, index, $event)" @dragover.prevent draggable="true" :key="item" class="relay-list">{{ item }}</div>
-          </transition-group>
-        </div>-->
       </div>
     </el-card>
   </div>
@@ -79,7 +84,6 @@ export default {
   components: {},
   data() {
     return {
-
       hexCode: "",
       select: "A",
       secondBoard: false,
@@ -271,7 +275,26 @@ export default {
           console.log("失败");
         });
     },
+    //把txt文件的内容显示到文本框中
+    handleSuccess(res, file) {
+      this.hexCode = res;
+    },
+    //上传新的文件时更新上传列表
+    handleChange(file, fileList) {
+      //获取最后一次得到的文件
+      //覆盖上一次的文件
+      this.fileLists = fileList.slice(-1);
+    },
 
+    //判断上传文件只能是txt文件
+    beforeUpload(file) {
+      const isTxt = file.type === "text/plain";
+      if (!isTxt) {
+        this.$message.error("只能上传 TXT 格式!");
+      }
+      return isTxt;
+    },
+    //判断并上传16进制码
     subHex(num) {
       let arr = this.hexCode.trim().split(/\s+/);
       let subData = {
@@ -291,16 +314,15 @@ export default {
         }
       }
       if (checked) {
-        subData.ByteArray =this.hexCode;
+        subData.ByteArray = this.hexCode;
         console.log(subData);
-
         this.$axios
           .post(
             this.portAddress + "/api/home/DominateEquipmentNoProcotol",
             subData
           )
           .then(res => {
-            console.log('subData:',subData);
+            console.log("subData:", subData);
 
             this.$message({
               message: "提交成功",
@@ -324,6 +346,11 @@ export default {
 };
 </script>
 <style lang="less" scoped>
+.upload-box {
+  margin-top: 10px;
+  float: right;
+  display: flex;
+}
 .relay {
   .card {
     box-sizing: border-box;
@@ -332,7 +359,6 @@ export default {
 }
 .w-70 {
   width: 60%;
-
   margin: 50px auto;
   /deep/.el-select .el-input {
     width: 130px;

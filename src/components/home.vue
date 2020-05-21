@@ -128,7 +128,6 @@
             <p style="line-height:40px;">
               <span>房间状态：</span>
               <el-popover placement="bottom" trigger="click">
-                <!-- <el-tag v-for="i in roomStatusOptions" :key="i">{{i}}</el-tag> -->
                 <el-radio-group v-model="item.RoomStatus" @change="changeRoomStatus(item)">
                   <el-radio-button label="空房"></el-radio-button>
                   <el-radio-button label="钟点房"></el-radio-button>
